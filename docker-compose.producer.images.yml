@@ -1,0 +1,24 @@
+# גרסה זו משתמשת ב-images מוכנים מ-Docker Hub
+# כדי להשתמש בגרסה זו, צריך קודם:
+# 1. לבנות images: docker build -t yourusername/cartservice:latest ./CartService
+# 2. להעלות ל-Docker Hub: docker push yourusername/cartservice:latest
+# 3. לשנות את השם למטה לשם שלך
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  cartservice:
+    # שימי לב: צריך להחליף את yourusername לשם המשתמש שלך ב-Docker Hub
+    image: yourusername/cartservice:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - RabbitMq__Host=rabbitmq
+    depends_on:
+      - rabbitmq
+    restart: always
+

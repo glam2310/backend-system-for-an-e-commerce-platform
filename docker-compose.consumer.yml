@@ -1,0 +1,17 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  orderservice:
+    
+    image: YOUR_USERNAME/orderservice:latest
+    ports:
+      - "8081:8080"
+    environment:
+      - RabbitMq__Host=rabbitmq
+    depends_on:
+      - rabbitmq
+    restart: always

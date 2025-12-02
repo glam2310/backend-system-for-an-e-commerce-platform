@@ -1,0 +1,16 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  cartservice:
+    image: YOUR_USERNAME/cartservice:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - RabbitMq__Host=rabbitmq
+    depends_on:
+      - rabbitmq
+    restart: always
