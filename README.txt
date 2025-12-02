@@ -1,75 +1,72 @@
-# CartService & OrderService - E-commerce Backend System
+Project Summary
 
-## 1.full name and ID number
+This project implements a simplified backend system for an e-commerce platform using RabbitMQ event-driven communication. It consists of two applications: CartService (Producer) and OrderService (Consumer). The goal is to simulate how a real e-commerce system broadcasts new orders to multiple downstream services such as inventory, billing, and shipping.
 
-**Full Name:** Stav Glam  
-**ID Number:** 322331984
+What the Project Does
+1. CartService – Producer Application
 
----
+The CartService exposes an API endpoint (/create-order) that allows a customer to create a new order.
+The client sends only two fields:
 
-## 2. The full URLs and type of API request to generate the producer and the consumer applications
+orderId
 
-### Producer Application (CartService)
+numberOfItems
 
-**URL:** `http://localhost:8080/api/Orders/create-order`
+The service then automatically generates the full order object internally, including fields such as:
 
-**Request Type:** `POST`
+product list
 
-**Content-Type:** `application/json`
+total amount
 
-### Consumer Application (OrderService)
+random customer details
 
-**URL:** `http://localhost:8081/api/Orders/order-details?orderId={orderId}`
+timestamps
 
-**סוג Request:** `GET`
+order status (“new”)
 
+After the order is generated and validated:
 
-## 3. What type of exchange you chose and why?
+The CartService publishes the order as a JSON event to RabbitMQ.
 
-**Exchange Type:** `Fanout`
+The event is broadcast to all consumers using a Fanout exchange.
 
-**Reason:**
+Input validation is enforced, and invalid requests return appropriate error responses.
 
-1. **Broadcast Pattern**: According to the requirements, when a new order is created, it must be broadcast to multiple downstream services (inventory management, billing, shipping).
-A Fanout exchange sends all messages to all queues bound to it.
+2. OrderService – Consumer Application
 
-2. **Simplicity**: In a Fanout exchange, all consumers receive a copy of every message. This fits our use case where all services need to receive all orders.
+The OrderService connects to RabbitMQ and listens for new order events (orders where status = "new").
 
-3. **Decoupling**: The Producer doesn't need to know how many consumers exist or who they are. It simply publishes to the exchange, and the exchange distributes to all bound queues.
+When a new order message arrives:
 
-4. **Scalability**: Easy to add more consumers in the future - simply bind a new queue to the exchange, and it will automatically start receiving messages.
+It calculates the shipping cost, defined as:
+shippingCost = 2% of totalAmount
 
+It logs the order and stores it in an in-memory data store (for example, a simple dictionary or in-memory DB).
 
-## 4. Is there a binding key on the consumer? If so, what is it and why?
+It exposes its own API endpoint (/order-details) that:
 
-**NO, there isn't a binding key.**
+receives an orderId
 
-**Value:** `""` (empty string)
+retrieves the stored order
 
-**Reason:**
+returns the order details including the calculated shipping cost
 
-1. **Fanout Exchange Behavior**: In a Fanout exchange, the routing key is not used for routing. All messages are sent to all bound queues, regardless of the routing key.
+Final Deliverables
 
-2. **Standard Practice**: When using a Fanout exchange, it's standard practice to use an empty binding key, as it doesn't affect the behavior.
+You must submit:
 
-3. **Idempotent Binding**: Even if we use a different binding key, the result would be the same - all messages would still reach the queue.
+Two docker-compose.yml files (one for producer, one for consumer)
 
+One README file answering:
 
-## 5. Which service declared the exchange and queue and why?
+your full name & ID
 
-### Exchange Declaration:
+API URLs and request types
 
-**Both services declare the Exchange:**
-- **Producer (CartService)**: Declares the exchange before publishing messages
-- **Consumer (OrderService)**: Declares the exchange before creating the queue binding
+chosen exchange type and reasoning
 
-**Reason:**
+binding key explanation
 
-1. **Idempotent Operation**: `ExchangeDeclare` is an idempotent operation - if the exchange already exists with the same parameters, the operation won't fail. This allows each service to declare the exchange independently.
+which service declares the exchange/queue and why
 
-2. **Independence**: Each service can start independently without depending on the startup order of other services. If the Consumer starts before the Producer, it can still declare the exchange.
-
-3. **Durability**: The exchange is defined as durable (`durable: true`), so it persists even after RabbitMQ restarts.
-
-
-
+The system must run correctly via Docker Compose, and all API endpoints must be reachable—otherwise the project receives 0.
