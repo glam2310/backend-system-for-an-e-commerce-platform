@@ -58,15 +58,15 @@ The endpoint:
 
 ---
 
-# **📁 Final Deliverables**
+# ** Final Deliverables**
 
 You must submit:
 
-### **✔ Two `docker-compose.yml` files**
+### **Two `docker-compose.yml` files**
 - One for the **Producer**
 - One for the **Consumer**
 
-### **✔ One README file containing**
+### **One README file containing**
 - Full name & ID  
 - Full API URLs and request types  
 - Chosen exchange type + explanation  
