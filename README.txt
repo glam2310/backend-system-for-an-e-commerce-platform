@@ -1,72 +1,79 @@
-Project Summary
+# **Project Summary**
 
-This project implements a simplified backend system for an e-commerce platform using RabbitMQ event-driven communication. It consists of two applications: CartService (Producer) and OrderService (Consumer). The goal is to simulate how a real e-commerce system broadcasts new orders to multiple downstream services such as inventory, billing, and shipping.
+This project implements a simplified **backend system** for an e-commerce platform using **RabbitMQ** in an **event-driven architecture**.
 
-What the Project Does
-1. CartService – Producer Application
+It contains two separate applications:
+- **CartService (Producer)**
+- **OrderService (Consumer)**
 
-The CartService exposes an API endpoint (/create-order) that allows a customer to create a new order.
-The client sends only two fields:
+The system simulates how an e-commerce platform **broadcasts new orders** to multiple services such as **inventory**, **billing**, and **shipping**.
 
-orderId
+---
 
-numberOfItems
+# **What the Project Does**
 
-The service then automatically generates the full order object internally, including fields such as:
+## **1. CartService – Producer Application**
 
-product list
+### **API Endpoint**
 
-total amount
 
-random customer details
+### **Input**
+The client provides only:
+- **`orderId`**
+- **`numberOfItems`**
 
-timestamps
+### **Internal Auto-Generation**
+The service automatically generates:
+- **product list**
+- **total amount**
+- **random customer details**
+- **timestamps**
+- **order status: `"new"`**
 
-order status (“new”)
+### **Behavior**
+- Publishes the generated order as a **JSON event** to RabbitMQ  
+- Uses a **Fanout Exchange** to broadcast the event to all consumers  
+- Performs strict **input validation**, returning meaningful error responses when necessary
 
-After the order is generated and validated:
+---
 
-The CartService publishes the order as a JSON event to RabbitMQ.
+## **2. OrderService – Consumer Application**
 
-The event is broadcast to all consumers using a Fanout exchange.
+The service listens for **new order events** where:
 
-Input validation is enforced, and invalid requests return appropriate error responses.
 
-2. OrderService – Consumer Application
+### **When an event is received**
+- Calculates shipping cost:
 
-The OrderService connects to RabbitMQ and listens for new order events (orders where status = "new").
+- Logs the order
+- Stores it in an **in-memory data store** including the shipping cost
 
-When a new order message arrives:
+### **API Endpoint**
 
-It calculates the shipping cost, defined as:
-shippingCost = 2% of totalAmount
 
-It logs the order and stores it in an in-memory data store (for example, a simple dictionary or in-memory DB).
+The endpoint:
+- Receives an **orderId**
+- Retrieves the stored order
+- Returns **order details + shipping cost**
 
-It exposes its own API endpoint (/order-details) that:
+---
 
-receives an orderId
-
-retrieves the stored order
-
-returns the order details including the calculated shipping cost
-
-Final Deliverables
+# **📁 Final Deliverables**
 
 You must submit:
 
-Two docker-compose.yml files (one for producer, one for consumer)
+### **✔ Two `docker-compose.yml` files**
+- One for the **Producer**
+- One for the **Consumer**
 
-One README file answering:
+### **✔ One README file containing**
+- Full name & ID  
+- Full API URLs and request types  
+- Chosen exchange type + explanation  
+- Binding key usage (or no binding key) + explanation  
+- Which service declares the exchange & queue + why  
 
-your full name & ID
+---
 
-API URLs and request types
 
-chosen exchange type and reasoning
 
-binding key explanation
-
-which service declares the exchange/queue and why
-
-The system must run correctly via Docker Compose, and all API endpoints must be reachable—otherwise the project receives 0.
